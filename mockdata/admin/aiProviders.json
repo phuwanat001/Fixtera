@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "prov_google",
+    "name": "google",
+    "description": "Google Generative AI",
+    "isActive": true,
+    "createdAt": "2026-01-01T10:00:00Z"
+  },
+  {
+    "_id": "prov_openai",
+    "name": "openai",
+    "description": "OpenAI GPT Models",
+    "isActive": true,
+    "createdAt": "2026-01-01T10:00:00Z"
+  },
+  {
+    "_id": "prov_anthropic",
+    "name": "anthropic",
+    "description": "Anthropic Claude Models",
+    "isActive": false,
+    "createdAt": "2026-01-02T08:00:00Z"
+  }
+]

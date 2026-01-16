@@ -1,0 +1,57 @@
+[
+  {
+    "_id": "config_tech_blog_long",
+    "model": "model_gemini_2_flash",
+    "name": "Technical Blog – Long Form",
+    "temperature": 0.4,
+    "topP": 0.95,
+    "maxOutputTokens": 4096,
+    "systemPrompt": "You are a senior software engineer and technical writer. Create comprehensive, production-ready technical blog posts with code examples, best practices, and real-world use cases.",
+    "isDefault": true,
+    "createdBy": "user_admin"
+  },
+  {
+    "_id": "config_tech_blog_short",
+    "model": "model_gemini_2_flash",
+    "name": "Technical Blog – Short Form",
+    "temperature": 0.5,
+    "topP": 0.9,
+    "maxOutputTokens": 2048,
+    "systemPrompt": "You are a technical writer. Create concise, focused technical blog posts that explain concepts clearly with practical examples.",
+    "isDefault": false,
+    "createdBy": "user_admin"
+  },
+  {
+    "_id": "config_tutorial_step",
+    "model": "model_gemini_2_pro",
+    "name": "Step-by-Step Tutorial",
+    "temperature": 0.3,
+    "topP": 0.95,
+    "maxOutputTokens": 8192,
+    "systemPrompt": "You are an expert instructor. Create detailed step-by-step tutorials with clear instructions, code snippets, and explanations for each step.",
+    "isDefault": false,
+    "createdBy": "user_admin"
+  },
+  {
+    "_id": "config_news_summary",
+    "model": "model_gpt4_turbo",
+    "name": "Tech News Summary",
+    "temperature": 0.6,
+    "topP": 0.9,
+    "maxOutputTokens": 1024,
+    "systemPrompt": "You are a tech journalist. Summarize technology news and updates in an engaging, accessible manner for developers.",
+    "isDefault": false,
+    "createdBy": "user_editor"
+  },
+  {
+    "_id": "config_code_review",
+    "model": "model_gpt4o",
+    "name": "Code Review & Analysis",
+    "temperature": 0.2,
+    "topP": 0.95,
+    "maxOutputTokens": 4096,
+    "systemPrompt": "You are a senior code reviewer. Analyze code snippets, identify issues, suggest improvements, and explain best practices.",
+    "isDefault": false,
+    "createdBy": "user_admin"
+  }
+]

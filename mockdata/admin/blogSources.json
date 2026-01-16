@@ -1,0 +1,58 @@
+[
+  {
+    "_id": "source_nextjs_doc",
+    "blogPost": "blog_nextjs_15",
+    "sourceType": "url",
+    "sourceUrl": "https://nextjs.org/docs/app",
+    "sourceHash": "sha256:a9f3e8c2d1b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8",
+    "lastFetchedAt": "2026-01-10T09:00:00Z"
+  },
+  {
+    "_id": "source_nextjs_blog",
+    "blogPost": "blog_nextjs_15",
+    "sourceType": "url",
+    "sourceUrl": "https://nextjs.org/blog/next-15",
+    "sourceHash": "sha256:b8e2d1c0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4",
+    "lastFetchedAt": "2026-01-10T09:05:00Z"
+  },
+  {
+    "_id": "source_react_rsc",
+    "blogPost": "blog_react_server_components",
+    "sourceType": "url",
+    "sourceUrl": "https://react.dev/reference/rsc/server-components",
+    "sourceHash": "sha256:c7d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3",
+    "lastFetchedAt": "2026-01-09T08:00:00Z"
+  },
+  {
+    "_id": "source_typescript_release",
+    "blogPost": "blog_typescript_5",
+    "sourceType": "url",
+    "sourceUrl": "https://devblogs.microsoft.com/typescript/announcing-typescript-5-0/",
+    "sourceHash": "sha256:d6e0f8a9b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2",
+    "lastFetchedAt": "2026-01-11T07:00:00Z"
+  },
+  {
+    "_id": "source_gemini_doc",
+    "blogPost": "blog_gemini_api",
+    "sourceType": "url",
+    "sourceUrl": "https://ai.google.dev/gemini-api/docs",
+    "sourceHash": "sha256:e5f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1",
+    "lastFetchedAt": "2026-01-12T06:00:00Z"
+  },
+  {
+    "_id": "source_mongodb_doc",
+    "blogPost": "blog_mongodb_optimization",
+    "sourceType": "pdf",
+    "sourceUrl": "/uploads/mongodb-optimization-guide.pdf",
+    "sourceHash": "sha256:f4a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0",
+    "lastFetchedAt": "2026-01-03T10:00:00Z"
+  },
+  {
+    "_id": "source_docker_doc",
+    "blogPost": "blog_docker_kubernetes",
+    "sourceType": "url",
+    "sourceUrl": "https://docs.docker.com/get-started/",
+    "sourceHash": "sha256:a3b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9",
+    "lastFetchedAt": "2026-01-04T07:00:00Z"
+  }
+]

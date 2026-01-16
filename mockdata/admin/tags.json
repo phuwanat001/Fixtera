@@ -1,0 +1,72 @@
+[
+  {
+    "_id": "tag_nextjs",
+    "name": "Next.js",
+    "slug": "nextjs",
+    "color": "#000000",
+    "description": "Next.js framework topics"
+  },
+  {
+    "_id": "tag_react",
+    "name": "React",
+    "slug": "react",
+    "color": "#61DAFB",
+    "description": "React library topics"
+  },
+  {
+    "_id": "tag_web",
+    "name": "Web Development",
+    "slug": "web-development",
+    "color": "#FF6B6B",
+    "description": "General web development topics"
+  },
+  {
+    "_id": "tag_typescript",
+    "name": "TypeScript",
+    "slug": "typescript",
+    "color": "#3178C6",
+    "description": "TypeScript language topics"
+  },
+  {
+    "_id": "tag_nodejs",
+    "name": "Node.js",
+    "slug": "nodejs",
+    "color": "#339933",
+    "description": "Node.js runtime topics"
+  },
+  {
+    "_id": "tag_ai",
+    "name": "AI/ML",
+    "slug": "ai-ml",
+    "color": "#8B5CF6",
+    "description": "Artificial Intelligence and Machine Learning"
+  },
+  {
+    "_id": "tag_database",
+    "name": "Database",
+    "slug": "database",
+    "color": "#F59E0B",
+    "description": "Database and data storage topics"
+  },
+  {
+    "_id": "tag_devops",
+    "name": "DevOps",
+    "slug": "devops",
+    "color": "#10B981",
+    "description": "DevOps and deployment topics"
+  },
+  {
+    "_id": "tag_security",
+    "name": "Security",
+    "slug": "security",
+    "color": "#EF4444",
+    "description": "Security and authentication topics"
+  },
+  {
+    "_id": "tag_performance",
+    "name": "Performance",
+    "slug": "performance",
+    "color": "#F97316",
+    "description": "Performance optimization topics"
+  }
+]

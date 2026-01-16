@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "icon": "user-plus",
+    "iconColor": "text-blue-400",
+    "iconBg": "bg-blue-500/20",
+    "title": "New User Registration",
+    "message": "User john_doe has created a new account.",
+    "time": "10 minutes ago",
+    "isUnread": true,
+    "type": "info"
+  },
+  {
+    "id": "2",
+    "icon": "check-circle",
+    "iconColor": "text-green-400",
+    "iconBg": "bg-green-500/10",
+    "title": "Backup Completed",
+    "message": "Daily system backup was successful without errors.",
+    "time": "4 hours ago",
+    "isUnread": false,
+    "type": "success"
+  },
+  {
+    "id": "3",
+    "icon": "warning",
+    "iconColor": "text-orange-400",
+    "iconBg": "bg-orange-500/10",
+    "title": "High Server Load",
+    "message": "Server CPU usage reached 85% for 5 minutes.",
+    "time": "Yesterday",
+    "isUnread": false,
+    "type": "warning"
+  }
+]

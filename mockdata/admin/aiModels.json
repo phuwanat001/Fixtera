@@ -1,0 +1,52 @@
+[
+  {
+    "_id": "model_gemini_2_flash",
+    "provider": "prov_google",
+    "modelKey": "gemini-2.0-flash",
+    "displayName": "Gemini 2.0 Flash",
+    "contextLength": 1000000,
+    "supportsCode": true,
+    "supportsVision": false,
+    "isActive": true
+  },
+  {
+    "_id": "model_gemini_2_pro",
+    "provider": "prov_google",
+    "modelKey": "gemini-2.0-pro",
+    "displayName": "Gemini 2.0 Pro",
+    "contextLength": 2000000,
+    "supportsCode": true,
+    "supportsVision": true,
+    "isActive": true
+  },
+  {
+    "_id": "model_gpt4_turbo",
+    "provider": "prov_openai",
+    "modelKey": "gpt-4-turbo",
+    "displayName": "GPT-4 Turbo",
+    "contextLength": 128000,
+    "supportsCode": true,
+    "supportsVision": true,
+    "isActive": true
+  },
+  {
+    "_id": "model_gpt4o",
+    "provider": "prov_openai",
+    "modelKey": "gpt-4o",
+    "displayName": "GPT-4o",
+    "contextLength": 128000,
+    "supportsCode": true,
+    "supportsVision": true,
+    "isActive": true
+  },
+  {
+    "_id": "model_claude_sonnet",
+    "provider": "prov_anthropic",
+    "modelKey": "claude-3-5-sonnet",
+    "displayName": "Claude 3.5 Sonnet",
+    "contextLength": 200000,
+    "supportsCode": true,
+    "supportsVision": true,
+    "isActive": false
+  }
+]

@@ -1,0 +1,96 @@
+{
+  "blog_nextjs_15": {
+    "_id": "blog_nextjs_15",
+    "slug": "nextjs-15-app-router-overview",
+    "title": "Next.js 15 App Router – เจาะลึกสำหรับสาย Production",
+    "summary": "อธิบายแนวคิด App Router ใน Next.js 15 พร้อม use case จริง",
+    "coverImage": "https://images.unsplash.com/photo-1627398242450-274d0c71ba44?w=1200&h=630&fit=crop",
+    "difficultyLevel": "intermediate",
+    "language": "th",
+    "author": {
+      "_id": "user_admin",
+      "displayName": "Fixtera Admin",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"
+    },
+    "tags": [
+      {
+        "_id": "tag_nextjs",
+        "name": "Next.js",
+        "slug": "nextjs",
+        "color": "#FFFFFF"
+      },
+      {
+        "_id": "tag_react",
+        "name": "React",
+        "slug": "react",
+        "color": "#61DAFB"
+      },
+      {
+        "_id": "tag_web",
+        "name": "Web Development",
+        "slug": "web-development",
+        "color": "#FF6B6B"
+      }
+    ],
+    "content": "# Next.js 15 App Router – เจาะลึกสำหรับสาย Production\n\n## บทนำ\n\nApp Router เป็นการเปลี่ยนแปลงครั้งใหญ่ใน Next.js 15 ที่ถูกออกแบบมาเพื่อ production workloads โดยเฉพาะ ในบทความนี้เราจะมาเจาะลึกถึงหลักการทำงาน และวิธีการใช้งานจริง\n\n## App Router คืออะไร?\n\nApp Router เป็นระบบ routing ใหม่ที่มาแทนที่ Pages Router โดยใช้โครงสร้าง folder-based routing ใน directory `app/`\n\n### ข้อดีของ App Router\n\n- **React Server Components**: รองรับ RSC เต็มรูปแบบ\n- **Streaming**: สามารถ stream content ไปยัง client ได้\n- **Layouts**: ระบบ layout ที่ยืดหยุ่น\n- **Loading States**: จัดการ loading UI ได้ง่าย\n\n## โครงสร้าง Folder\n\n```\napp/\n├── layout.tsx\n├── page.tsx\n├── loading.tsx\n├── error.tsx\n├── blog/\n│   ├── page.tsx\n│   └── [slug]/\n│       └── page.tsx\n```\n\n## Server Components vs Client Components\n\nใน App Router component ทุกตัวเป็น Server Component โดย default:\n\n```tsx\n// Server Component (default)\nexport default function BlogPost() {\n  return <h1>Hello from Server</h1>;\n}\n\n// Client Component\n'use client';\nexport default function Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;\n}\n```\n\n## Data Fetching\n\nการ fetch data ใน App Router ทำได้โดยตรงใน component:\n\n```tsx\nasync function getData() {\n  const res = await fetch('https://api.example.com/data');\n  return res.json();\n}\n\nexport default async function Page() {\n  const data = await getData();\n  return <div>{data.title}</div>;\n}\n```\n\n## สรุป\n\nApp Router เป็นก้าวใหญ่ของ Next.js ที่ทำให้การพัฒนา web application มีประสิทธิภาพและยืดหยุ่นมากขึ้น เหมาะสำหรับ production workloads ที่ต้องการ performance และ scalability",
+    "readingTime": 12,
+    "viewCount": 1250,
+    "likeCount": 89,
+    "publishedAt": "2026-01-10T12:00:00Z",
+    "relatedPosts": [
+      {
+        "_id": "blog_react_server_components",
+        "slug": "react-server-components-guide",
+        "title": "React Server Components – คู่มือฉบับสมบูรณ์",
+        "coverImage": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&h=630&fit=crop"
+      }
+    ]
+  },
+  "blog_react_server_components": {
+    "_id": "blog_react_server_components",
+    "slug": "react-server-components-guide",
+    "title": "React Server Components – คู่มือฉบับสมบูรณ์",
+    "summary": "เรียนรู้ React Server Components ตั้งแต่พื้นฐานจนถึงการใช้งานจริง",
+    "coverImage": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&h=630&fit=crop",
+    "difficultyLevel": "advanced",
+    "language": "th",
+    "author": {
+      "_id": "user_writer_01",
+      "displayName": "Phuwanat Developer",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=phuwanat"
+    },
+    "tags": [
+      {
+        "_id": "tag_react",
+        "name": "React",
+        "slug": "react",
+        "color": "#61DAFB"
+      },
+      {
+        "_id": "tag_nextjs",
+        "name": "Next.js",
+        "slug": "nextjs",
+        "color": "#FFFFFF"
+      },
+      {
+        "_id": "tag_performance",
+        "name": "Performance",
+        "slug": "performance",
+        "color": "#F97316"
+      }
+    ],
+    "content": "# React Server Components – คู่มือฉบับสมบูรณ์\n\n## React Server Components คืออะไร?\n\nReact Server Components (RSC) เป็น paradigm ใหม่ในการสร้าง React application ที่ช่วยให้ component บางตัวสามารถ render บน server ได้โดยไม่ต้องส่ง JavaScript ไปยัง client\n\n## ความแตกต่างจาก SSR\n\n| Feature | SSR | RSC |\n|---------|-----|-----|\n| JavaScript to Client | ทั้งหมด | เฉพาะ Client Components |\n| Hydration | ต้อง hydrate | ไม่ต้อง hydrate |\n| Data Fetching | getServerSideProps | async/await ใน component |\n\n## การใช้งาน RSC\n\n### Server Component\n\n```tsx\n// app/posts/page.tsx\nimport { db } from '@/lib/db';\n\nexport default async function PostsPage() {\n  const posts = await db.posts.findMany();\n  \n  return (\n    <ul>\n      {posts.map(post => (\n        <li key={post.id}>{post.title}</li>\n      ))}\n    </ul>\n  );\n}\n```\n\n### Client Component\n\n```tsx\n'use client';\n\nimport { useState } from 'react';\n\nexport default function LikeButton({ postId }) {\n  const [liked, setLiked] = useState(false);\n  \n  return (\n    <button onClick={() => setLiked(!liked)}>\n      {liked ? '❤️' : '🤍'}\n    </button>\n  );\n}\n```\n\n## Best Practices\n\n1. **ใช้ Server Components เป็น default**: เลือกใช้ 'use client' เฉพาะเมื่อจำเป็น\n2. **แยก Client Components ให้เล็กที่สุด**: ลด bundle size\n3. **ใช้ Suspense สำหรับ loading states**: ปรับปรุง UX\n\n## สรุป\n\nRSC เป็นอนาคตของ React application ที่ช่วยเพิ่ม performance และลด complexity ในการพัฒนา",
+    "readingTime": 18,
+    "viewCount": 890,
+    "likeCount": 67,
+    "publishedAt": "2026-01-09T15:00:00Z",
+    "relatedPosts": [
+      {
+        "_id": "blog_nextjs_15",
+        "slug": "nextjs-15-app-router-overview",
+        "title": "Next.js 15 App Router – เจาะลึกสำหรับสาย Production",
+        "coverImage": "https://images.unsplash.com/photo-1627398242450-274d0c71ba44?w=1200&h=630&fit=crop"
+      }
+    ]
+  }
+}

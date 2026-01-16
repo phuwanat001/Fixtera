@@ -1,0 +1,17 @@
+{
+  "currentUser": {
+    "_id": "user_viewer_01",
+    "username": "guest_reader",
+    "email": "reader@example.com",
+    "displayName": "Guest Reader",
+    "avatar": null,
+    "role": "viewer",
+    "preferences": {
+      "language": "th",
+      "theme": "dark"
+    },
+    "bookmarkedPosts": ["blog_nextjs_15", "blog_mongodb_optimization"],
+    "likedPosts": ["blog_nextjs_15", "blog_react_server_components"],
+    "createdAt": "2025-12-01T00:00:00Z"
+  }
+}

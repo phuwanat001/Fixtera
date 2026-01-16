@@ -1,0 +1,57 @@
+[
+  {
+    "_id": "user_admin",
+    "username": "fixtera_admin",
+    "email": "admin@fixtera.dev",
+    "role": "admin",
+    "displayName": "Fixtera Admin",
+    "avatar": "/avatars/admin.png",
+    "isActive": true,
+    "lastLoginAt": "2026-01-12T14:30:00Z",
+    "createdAt": "2025-06-01T00:00:00Z"
+  },
+  {
+    "_id": "user_editor",
+    "username": "tech_editor",
+    "email": "editor@fixtera.dev",
+    "role": "editor",
+    "displayName": "Tech Editor",
+    "avatar": "/avatars/editor.png",
+    "isActive": true,
+    "lastLoginAt": "2026-01-12T10:00:00Z",
+    "createdAt": "2025-07-15T00:00:00Z"
+  },
+  {
+    "_id": "user_writer_01",
+    "username": "phuwanat_dev",
+    "email": "phuwanat@fixtera.dev",
+    "role": "writer",
+    "displayName": "Phuwanat Developer",
+    "avatar": "/avatars/phuwanat.png",
+    "isActive": true,
+    "lastLoginAt": "2026-01-11T18:00:00Z",
+    "createdAt": "2025-08-01T00:00:00Z"
+  },
+  {
+    "_id": "user_writer_02",
+    "username": "somchai_tech",
+    "email": "somchai@fixtera.dev",
+    "role": "writer",
+    "displayName": "Somchai Tech",
+    "avatar": "/avatars/somchai.png",
+    "isActive": true,
+    "lastLoginAt": "2026-01-10T09:00:00Z",
+    "createdAt": "2025-09-10T00:00:00Z"
+  },
+  {
+    "_id": "user_viewer_01",
+    "username": "guest_reader",
+    "email": "reader@example.com",
+    "role": "viewer",
+    "displayName": "Guest Reader",
+    "avatar": null,
+    "isActive": true,
+    "lastLoginAt": "2026-01-08T12:00:00Z",
+    "createdAt": "2025-12-01T00:00:00Z"
+  }
+]

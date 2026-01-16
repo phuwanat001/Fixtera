@@ -1,0 +1,72 @@
+[
+  {
+    "_id": "review_001",
+    "blogVersion": "version_nextjs_2",
+    "reviewer": "user_admin",
+    "status": "approved",
+    "comment": "เนื้อหาถูกต้อง เหมาะกับสาย production ครบถ้วนดี",
+    "checklist": {
+      "technicalAccuracy": true,
+      "codeExamples": true,
+      "grammarSpelling": true,
+      "formatting": true
+    },
+    "createdAt": "2026-01-10T10:00:00Z"
+  },
+  {
+    "_id": "review_002",
+    "blogVersion": "version_rsc_1",
+    "reviewer": "user_editor",
+    "status": "approved",
+    "comment": "บทความครบถ้วน อธิบายได้ชัดเจน เหมาะสำหรับ developer ระดับ advanced",
+    "checklist": {
+      "technicalAccuracy": true,
+      "codeExamples": true,
+      "grammarSpelling": true,
+      "formatting": true
+    },
+    "createdAt": "2026-01-09T11:00:00Z"
+  },
+  {
+    "_id": "review_003",
+    "blogVersion": "version_ts5_1",
+    "reviewer": "user_admin",
+    "status": "revision_requested",
+    "comment": "ต้องการเพิ่มตัวอย่าง code ใน section Decorators และ const type parameters",
+    "checklist": {
+      "technicalAccuracy": true,
+      "codeExamples": false,
+      "grammarSpelling": true,
+      "formatting": true
+    },
+    "createdAt": "2026-01-11T14:00:00Z"
+  },
+  {
+    "_id": "review_004",
+    "blogVersion": "version_gemini_1",
+    "reviewer": "user_editor",
+    "status": "pending",
+    "comment": null,
+    "checklist": {
+      "technicalAccuracy": null,
+      "codeExamples": null,
+      "grammarSpelling": null,
+      "formatting": null
+    },
+    "createdAt": "2026-01-12T15:00:00Z"
+  },
+  {
+    "_id": "review_005",
+    "blogVersion": "version_mongodb_1",
+    "reviewer": "user_admin",
+    "status": "approved",
+    "comment": "เนื้อหาเชิงลึก เหมาะสำหรับ production workload",
+    "checklist": {
+      "technicalAccuracy": true,
+      "codeExamples": true,
+      "grammarSpelling": true,
+      "formatting": true
+    },
+    "createdAt": "2026-01-04T16:00:00Z"
+  }
+]

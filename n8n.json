@@ -1,0 +1,94 @@
+{
+  "name": "FixTera Blog AI Flow (DB Only)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fixtera-generate-blog",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "prompt",
+              "value": "You are a senior technical writer. Write a technical blog post about Next.js App Router for intermediate developers. Output markdown only."
+            }
+          ]
+        }
+      },
+      "id": "SetPrompt",
+      "name": "Generate Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    title: \"Next.js App Router – Production Overview\",\n    content: \"## Introduction\\nThis article explains Next.js App Router...\",\n    aiModel: \"gemini-2.0\",\n    generatedBy: \"ai\",\n    status: \"draft\",\n    version: 1\n  }\n}];"
+      },
+      "id": "AIGenerate",
+      "name": "AI Generate (Mock)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    blogId: \"blog_nextjs_app_router\",\n    version: $json.version,\n    title: $json.title,\n    content: $json.content,\n    aiModel: $json.aiModel,\n    status: \"draft\",\n    createdAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "SaveDraft",
+      "name": "Save Draft (Mock DB)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "id": "WaitApprove",
+      "name": "Wait for Admin Approve",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    blogId: $json.blogId,\n    version: $json.version,\n    status: \"published\",\n    publishedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "Publish",
+      "name": "Publish Blog",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "Generate Prompt", "type": "main", "index": 0 }]]
+    },
+    "Generate Prompt": {
+      "main": [[{ "node": "AI Generate (Mock)", "type": "main", "index": 0 }]]
+    },
+    "AI Generate (Mock)": {
+      "main": [[{ "node": "Save Draft (Mock DB)", "type": "main", "index": 0 }]]
+    },
+    "Save Draft (Mock DB)": {
+      "main": [
+        [{ "node": "Wait for Admin Approve", "type": "main", "index": 0 }]
+      ]
+    },
+    "Wait for Admin Approve": {
+      "main": [[{ "node": "Publish Blog", "type": "main", "index": 0 }]]
+    }
+  }
+}

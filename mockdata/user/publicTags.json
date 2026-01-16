@@ -1,0 +1,58 @@
+[
+  {
+    "_id": "tag_nextjs",
+    "name": "Next.js",
+    "slug": "nextjs",
+    "color": "#000000",
+    "postCount": 2
+  },
+  {
+    "_id": "tag_react",
+    "name": "React",
+    "slug": "react",
+    "color": "#61DAFB",
+    "postCount": 2
+  },
+  {
+    "_id": "tag_web",
+    "name": "Web Development",
+    "slug": "web-development",
+    "color": "#FF6B6B",
+    "postCount": 2
+  },
+  {
+    "_id": "tag_typescript",
+    "name": "TypeScript",
+    "slug": "typescript",
+    "color": "#3178C6",
+    "postCount": 0
+  },
+  {
+    "_id": "tag_nodejs",
+    "name": "Node.js",
+    "slug": "nodejs",
+    "color": "#339933",
+    "postCount": 2
+  },
+  {
+    "_id": "tag_database",
+    "name": "Database",
+    "slug": "database",
+    "color": "#F59E0B",
+    "postCount": 1
+  },
+  {
+    "_id": "tag_devops",
+    "name": "DevOps",
+    "slug": "devops",
+    "color": "#10B981",
+    "postCount": 1
+  },
+  {
+    "_id": "tag_performance",
+    "name": "Performance",
+    "slug": "performance",
+    "color": "#F97316",
+    "postCount": 2
+  }
+]

@@ -1,0 +1,154 @@
+[
+  {
+    "_id": "blog_nextjs_15",
+    "slug": "nextjs-15-app-router-overview",
+    "title": "Next.js 15 App Router – เจาะลึกสำหรับสาย Production",
+    "summary": "อธิบายแนวคิด App Router ใน Next.js 15 พร้อม use case จริง",
+    "coverImage": "https://images.unsplash.com/photo-1627398242450-274d0c71ba44?w=1200&h=630&fit=crop",
+    "difficultyLevel": "intermediate",
+    "language": "th",
+    "author": {
+      "_id": "user_admin",
+      "displayName": "Fixtera Admin",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"
+    },
+    "tags": [
+      {
+        "_id": "tag_nextjs",
+        "name": "Next.js",
+        "slug": "nextjs",
+        "color": "#FFFFFF"
+      },
+      {
+        "_id": "tag_react",
+        "name": "React",
+        "slug": "react",
+        "color": "#61DAFB"
+      },
+      {
+        "_id": "tag_web",
+        "name": "Web Development",
+        "slug": "web-development",
+        "color": "#FF6B6B"
+      }
+    ],
+    "readingTime": 12,
+    "viewCount": 1250,
+    "likeCount": 89,
+    "publishedAt": "2026-01-10T12:00:00Z"
+  },
+  {
+    "_id": "blog_react_server_components",
+    "slug": "react-server-components-guide",
+    "title": "React Server Components – คู่มือฉบับสมบูรณ์",
+    "summary": "เรียนรู้ React Server Components ตั้งแต่พื้นฐานจนถึงการใช้งานจริง",
+    "coverImage": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&h=630&fit=crop",
+    "difficultyLevel": "advanced",
+    "language": "th",
+    "author": {
+      "_id": "user_writer_01",
+      "displayName": "Phuwanat Developer",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=phuwanat"
+    },
+    "tags": [
+      {
+        "_id": "tag_react",
+        "name": "React",
+        "slug": "react",
+        "color": "#61DAFB"
+      },
+      {
+        "_id": "tag_nextjs",
+        "name": "Next.js",
+        "slug": "nextjs",
+        "color": "#FFFFFF"
+      },
+      {
+        "_id": "tag_performance",
+        "name": "Performance",
+        "slug": "performance",
+        "color": "#F97316"
+      }
+    ],
+    "readingTime": 18,
+    "viewCount": 890,
+    "likeCount": 67,
+    "publishedAt": "2026-01-09T15:00:00Z"
+  },
+  {
+    "_id": "blog_mongodb_optimization",
+    "slug": "mongodb-query-optimization",
+    "title": "MongoDB Query Optimization – เทคนิคเพิ่มความเร็ว",
+    "summary": "เทคนิคการ optimize query ใน MongoDB สำหรับ production",
+    "coverImage": "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=1200&h=630&fit=crop",
+    "difficultyLevel": "advanced",
+    "language": "th",
+    "author": {
+      "_id": "user_editor",
+      "displayName": "Tech Editor",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=editor"
+    },
+    "tags": [
+      {
+        "_id": "tag_database",
+        "name": "Database",
+        "slug": "database",
+        "color": "#F59E0B"
+      },
+      {
+        "_id": "tag_performance",
+        "name": "Performance",
+        "slug": "performance",
+        "color": "#F97316"
+      },
+      {
+        "_id": "tag_nodejs",
+        "name": "Node.js",
+        "slug": "nodejs",
+        "color": "#339933"
+      }
+    ],
+    "readingTime": 15,
+    "viewCount": 2100,
+    "likeCount": 156,
+    "publishedAt": "2026-01-05T10:00:00Z"
+  },
+  {
+    "_id": "blog_docker_kubernetes",
+    "slug": "docker-kubernetes-deployment",
+    "title": "Docker & Kubernetes – Deploy แอพ Node.js อย่างมือโปร",
+    "summary": "เรียนรู้การ deploy แอพ Node.js ด้วย Docker และ Kubernetes",
+    "coverImage": "https://images.unsplash.com/photo-1667372393119-c81c0cda0563?w=1200&h=630&fit=crop",
+    "difficultyLevel": "advanced",
+    "language": "th",
+    "author": {
+      "_id": "user_writer_01",
+      "displayName": "Phuwanat Developer",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=phuwanat"
+    },
+    "tags": [
+      {
+        "_id": "tag_devops",
+        "name": "DevOps",
+        "slug": "devops",
+        "color": "#10B981"
+      },
+      {
+        "_id": "tag_nodejs",
+        "name": "Node.js",
+        "slug": "nodejs",
+        "color": "#339933"
+      },
+      {
+        "_id": "tag_web",
+        "name": "Web Development",
+        "slug": "web-development",
+        "color": "#FF6B6B"
+      }
+    ],
+    "readingTime": 20,
+    "viewCount": 1800,
+    "likeCount": 134,
+    "publishedAt": "2026-01-06T09:00:00Z"
+  }
+]
