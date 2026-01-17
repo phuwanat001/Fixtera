@@ -3,12 +3,13 @@ import React from "react";
 interface NotificationItemProps {
   id: string;
   icon: string;
-  iconColor: string;
-  iconBg: string;
+  iconColor?: string;
+  iconBg?: string;
   title: string;
   message: React.ReactNode;
   time: string;
   isUnread?: boolean;
+  type?: string;
   onMarkRead: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -17,12 +18,13 @@ interface NotificationItemProps {
 export default function NotificationItem({
   id,
   icon,
-  iconColor,
-  iconBg,
+  iconColor = "text-blue-400",
+  iconBg = "bg-blue-500/10",
   title,
   message,
   time,
   isUnread = false,
+  type,
   onMarkRead,
   onEdit,
   onDelete,

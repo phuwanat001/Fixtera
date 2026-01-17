@@ -1,13 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { CardListSkeleton } from "./CardListSkeleton";
-
-// Import mock data
-import reviewsData from "@/mockdata/admin/reviews.json";
-import blogVersionsData from "@/mockdata/admin/blogVersions.json";
-import blogPostsData from "@/mockdata/admin/blogPosts.json";
-import usersData from "@/mockdata/admin/users.json";
 
 interface Review {
   _id: string;
@@ -37,29 +32,56 @@ const statusStyles: Record<string, { bg: string; icon: string }> = {
 export default function ReviewsSection() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+
+  // Fetch reviews and related data
+  const fetchData = async () => {
+    try {
+      const [reviewsRes, blogsRes, usersRes] = await Promise.all([
+        fetch("/api/reviews"),
+        fetch("/api/blogs?limit=100"),
+        fetch("/api/users"),
+      ]);
+
+      const reviewsData = await reviewsRes.json();
+      const blogsData = await blogsRes.json();
+      const usersData = await usersRes.json();
+
+      if (reviewsData.success) {
+        setReviews(reviewsData.reviews);
+      }
+      if (blogsData.blogs) {
+        setBlogs(blogsData.blogs);
+      }
+      if (usersData.success) {
+        setUsers(usersData.users);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load reviews");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Simulate API fetch
-    const timer = setTimeout(() => {
-      setReviews(reviewsData);
-      setIsLoading(false);
-    }, 1500); // Slightly longer for demo
-    return () => clearTimeout(timer);
+    fetchData();
   }, []);
 
   const getBlogTitle = (versionId: string) => {
-    const version = blogVersionsData.find((v) => v._id === versionId);
-    if (!version) return "Unknown";
-    const blog = blogPostsData.find((b) => b._id === version.blogPost);
-    return blog?.title || "Unknown";
+    // Try to find by blogVersion or blogPost id
+    const blog = blogs.find((b) => b._id === versionId);
+    return blog?.title || versionId;
   };
 
   const getReviewerName = (userId: string) => {
-    const user = usersData.find((u) => u._id === userId);
+    const user = users.find((u) => u._id === userId);
     return user?.displayName || userId;
   };
 
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -67,19 +89,37 @@ export default function ReviewsSection() {
     });
   };
 
-  const handleAction = (id: string, action: "approve" | "reject") => {
-    setReviews((prev) =>
-      prev.map((review) => {
-        if (review._id === id) {
-          return {
-            ...review,
-            status: action === "approve" ? "approved" : "rejected",
-          };
-        }
-        return review;
-      })
-    );
+  const handleAction = async (id: string, action: "approve" | "reject") => {
+    const newStatus = action === "approve" ? "approved" : "rejected";
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: id, status: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setReviews((prev) =>
+          prev.map((review) =>
+            review._id === id ? { ...review, status: newStatus } : review
+          )
+        );
+        toast.success(
+          `Review ${action === "approve" ? "approved" : "rejected"}!`
+        );
+      } else {
+        toast.error(data.error || "Failed to update review");
+      }
+    } catch (error) {
+      console.error("Error updating review:", error);
+      toast.error("Failed to update review");
+    }
   };
+
+  const pendingCount = reviews.filter((r) => r.status === "pending").length;
 
   return (
     <div className="space-y-6">
@@ -93,7 +133,7 @@ export default function ReviewsSection() {
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1.5 text-xs rounded-full bg-blue-500/20 text-blue-400">
-            {reviews.filter((r) => r.status === "pending").length} Pending
+            {pendingCount} Pending
           </span>
         </div>
       </div>
@@ -102,6 +142,18 @@ export default function ReviewsSection() {
       <div className="space-y-4">
         {isLoading ? (
           <CardListSkeleton count={3} />
+        ) : reviews.length === 0 ? (
+          <div className="text-center py-16 bg-slate-900/50 border border-slate-800 rounded-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <i className="ph ph-check-circle text-3xl text-slate-500"></i>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              No Reviews Yet
+            </h3>
+            <p className="text-sm text-slate-400">
+              Reviews will appear here when content is submitted for approval
+            </p>
+          </div>
         ) : (
           reviews.map((review) => (
             <div
@@ -126,7 +178,7 @@ export default function ReviewsSection() {
                       {review.status.replace("_", " ")}
                     </span>
                     <span className="text-xs text-slate-500 font-mono">
-                      {review._id}
+                      {review._id.slice(-8)}
                     </span>
                     <span className="text-xs text-slate-500">
                       • {formatDate(review.createdAt)}
@@ -160,29 +212,31 @@ export default function ReviewsSection() {
                       Review Checklist
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {Object.entries(review.checklist).map(([key, value]) => (
-                        <span
-                          key={key}
-                          className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border flex items-center gap-1.5 ${
-                            value === true
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : value === false
-                              ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                              : "bg-slate-700/30 text-slate-500 border-slate-700/50"
-                          }`}
-                        >
-                          <i
-                            className={`ph ph-${
+                      {Object.entries(review.checklist || {}).map(
+                        ([key, value]) => (
+                          <span
+                            key={key}
+                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border flex items-center gap-1.5 ${
                               value === true
-                                ? "check"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                 : value === false
-                                ? "x"
-                                : "minus"
+                                ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                : "bg-slate-700/30 text-slate-500 border-slate-700/50"
                             }`}
-                          ></i>
-                          {key.replace(/([A-Z])/g, " $1").trim()}
-                        </span>
-                      ))}
+                          >
+                            <i
+                              className={`ph ph-${
+                                value === true
+                                  ? "check"
+                                  : value === false
+                                  ? "x"
+                                  : "minus"
+                              }`}
+                            ></i>
+                            {key.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>

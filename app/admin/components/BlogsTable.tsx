@@ -15,6 +15,7 @@ interface BlogPost {
   publishedAt: string | null;
   updatedAt: string;
   createdAt: string;
+  isFixed?: boolean;
 }
 
 interface BlogsTableProps {
@@ -52,22 +53,85 @@ export default function BlogsTable({ searchQuery = "" }: BlogsTableProps) {
   );
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this blog?")) return;
-
     const blog = blogs.find((b) => b._id === id);
+
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <span>Delete blog "{blog?.title}"?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  const response = await fetch(`/api/blogs/${id}`, {
+                    method: "DELETE",
+                  });
+                  const data = await response.json();
+
+                  if (data.success) {
+                    setBlogs((prev) => prev.filter((b) => b._id !== id));
+                    toast.success(`Blog "${blog?.title}" deleted`);
+                  } else {
+                    toast.error(data.error || "Failed to delete blog");
+                  }
+                } catch (error) {
+                  console.error("Error deleting blog:", error);
+                  toast.error("Failed to delete blog");
+                }
+              }}
+              className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-slate-600 text-white rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 10000 }
+    );
+  };
+
+  const handleToggleFixed = async (id: string) => {
+    const blog = blogs.find((b) => b._id === id);
+    if (!blog) return;
+
+    const newFixedState = !blog.isFixed;
     try {
-      const response = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
+      const response = await fetch("/api/blogs", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: id, isFixed: newFixedState }),
+      });
       const data = await response.json();
 
       if (data.success) {
-        setBlogs((prev) => prev.filter((b) => b._id !== id));
-        toast.success(`Blog "${blog?.title}" deleted`);
+        setBlogs((prev) =>
+          prev
+            .map((b) => (b._id === id ? { ...b, isFixed: newFixedState } : b))
+            .sort((a, b) => {
+              // Re-sort: fixed posts first
+              if (a.isFixed && !b.isFixed) return -1;
+              if (!a.isFixed && b.isFixed) return 1;
+              return 0;
+            })
+        );
+        toast.success(
+          newFixedState
+            ? `"${blog.title}" pinned to top`
+            : `"${blog.title}" unpinned`
+        );
       } else {
-        toast.error(data.error || "Failed to delete blog");
+        toast.error(data.error || "Failed to update blog");
       }
     } catch (error) {
-      console.error("Error deleting blog:", error);
-      toast.error("Failed to delete blog");
+      console.error("Error toggling fixed:", error);
+      toast.error("Failed to update blog");
     }
   };
 
@@ -132,7 +196,11 @@ export default function BlogsTable({ searchQuery = "" }: BlogsTableProps) {
               filteredBlogs.map((blog) => (
                 <tr
                   key={blog._id}
-                  className="group hover:bg-slate-800/30 transition-colors"
+                  className={`group hover:bg-slate-800/30 transition-colors ${
+                    blog.isFixed
+                      ? "bg-amber-500/5 border-l-2 border-l-amber-500"
+                      : ""
+                  }`}
                 >
                   <td className="p-5">
                     <div className="flex items-center gap-4">
@@ -140,7 +208,13 @@ export default function BlogsTable({ searchQuery = "" }: BlogsTableProps) {
                         className={`w-14 h-14 rounded-xl bg-linear-to-tr from-blue-600 to-cyan-500 shrink-0 shadow-lg shadow-blue-500/10`}
                       ></div>
                       <div>
-                        <div className="font-bold text-white text-base group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1 tracking-tight">
+                        <div className="font-bold text-white text-base group-hover:text-cyan-400 transition-colors cursor-pointer line-clamp-1 tracking-tight flex items-center gap-2">
+                          {blog.isFixed && (
+                            <i
+                              className="ph-fill ph-push-pin text-amber-400 text-sm"
+                              title="Pinned"
+                            ></i>
+                          )}
                           {blog.title}
                         </div>
                         <div className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-2">
@@ -181,6 +255,21 @@ export default function BlogsTable({ searchQuery = "" }: BlogsTableProps) {
                   </td>
                   <td className="p-5 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleToggleFixed(blog._id)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          blog.isFixed
+                            ? "bg-amber-500/20 text-amber-400 hover:bg-amber-500/30"
+                            : "hover:bg-amber-500/10 hover:text-amber-400 text-slate-400"
+                        }`}
+                        title={blog.isFixed ? "Unpin from top" : "Pin to top"}
+                      >
+                        <i
+                          className={`ph ${
+                            blog.isFixed ? "ph-fill" : ""
+                          } ph-push-pin text-lg`}
+                        ></i>
+                      </button>
                       <button
                         onClick={() =>
                           router.push(`/admin/blogs/${blog._id}/edit`)

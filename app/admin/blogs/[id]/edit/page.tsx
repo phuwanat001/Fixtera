@@ -7,12 +7,22 @@ import BlogEditor from "../../../components/BlogEditor";
 import AdminPageLayout from "../../../components/AdminPageLayout";
 import { use } from "react";
 
+interface BlogBlock {
+  id: string;
+  type: "text" | "image" | "code" | "file-tree";
+  content: string;
+  imageUrl?: string;
+  caption?: string;
+  language?: string;
+}
+
 interface BlogData {
   _id: string;
   title: string;
   slug: string;
   summary: string;
   content: string;
+  blocks?: BlogBlock[];
   coverImage: string;
   tags: string[];
   author: string;
@@ -38,7 +48,7 @@ export default function EditBlogPage({
       try {
         const response = await fetch(`/api/blogs/${id}`);
         const data = await response.json();
-        
+
         if (data.blog) {
           setBlog(data.blog);
         } else {
@@ -51,7 +61,7 @@ export default function EditBlogPage({
         setIsLoading(false);
       }
     };
-    
+
     fetchBlog();
   }, [id]);
 
@@ -98,7 +108,9 @@ export default function EditBlogPage({
             <i className="ph ph-warning text-3xl text-red-400"></i>
           </div>
           <h2 className="text-xl font-bold text-white mb-2">Blog Not Found</h2>
-          <p className="text-slate-400 mb-6">{error || "The blog you're looking for doesn't exist."}</p>
+          <p className="text-slate-400 mb-6">
+            {error || "The blog you're looking for doesn't exist."}
+          </p>
           <button
             onClick={() => router.push("/admin?tab=blogs")}
             className="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors"
@@ -115,6 +127,7 @@ export default function EditBlogPage({
     slug: blog.slug,
     summary: blog.summary || "",
     content: blog.content,
+    blocks: blog.blocks,
     coverImage: blog.coverImage || "",
     tags: blog.tags || [],
     authorName: blog.author || "Admin",
@@ -128,8 +141,12 @@ export default function EditBlogPage({
         <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center gap-3">
           <i className="ph ph-magic-wand text-purple-400 text-xl"></i>
           <div>
-            <p className="text-sm font-medium text-purple-200">AI Generated Content</p>
-            <p className="text-xs text-purple-300/70">Review and edit the content before publishing</p>
+            <p className="text-sm font-medium text-purple-200">
+              AI Generated Content
+            </p>
+            <p className="text-xs text-purple-300/70">
+              Review and edit the content before publishing
+            </p>
           </div>
         </div>
       )}

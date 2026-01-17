@@ -33,6 +33,103 @@ interface BlogEditorProps {
   isSaving?: boolean;
 }
 
+// Parse markdown content to blocks (for backward compatibility with old blogs)
+const parseContentToBlocks = (content: string): BlogBlock[] => {
+  if (!content) return [{ id: "1", type: "text", content: "" }];
+
+  const blocks: BlogBlock[] = [];
+  const lines = content.split("\n");
+  let currentTextBlock = "";
+  let insideCodeBlock = false;
+  let codeBlockContent = "";
+  let codeBlockLanguage = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Handle code blocks
+    if (line.trim().startsWith("```")) {
+      if (insideCodeBlock) {
+        // End code block - determine if it's code or file-tree based on language
+        const isFileTree =
+          !codeBlockLanguage ||
+          codeBlockLanguage === "text" ||
+          codeBlockLanguage === "plain";
+        blocks.push({
+          id: Date.now().toString() + (isFileTree ? "-tree-" : "-code-") + i,
+          type: isFileTree ? "file-tree" : "code",
+          content: codeBlockContent.trim(),
+          language: isFileTree ? undefined : codeBlockLanguage,
+        });
+        codeBlockContent = "";
+        insideCodeBlock = false;
+      } else {
+        // Save any pending text
+        if (currentTextBlock.trim()) {
+          blocks.push({
+            id: Date.now().toString() + "-text-" + i,
+            type: "text",
+            content: currentTextBlock.trim(),
+          });
+          currentTextBlock = "";
+        }
+        // Start code block
+        insideCodeBlock = true;
+        codeBlockLanguage =
+          line.trim().replace("```", "").split(":")[0].trim() || "";
+      }
+      continue;
+    }
+
+    if (insideCodeBlock) {
+      codeBlockContent += line + "\n";
+      continue;
+    }
+
+    // Handle images: ![alt](url)
+    const imageMatch = line.match(/^!\[(.*?)\]\((.*?)\)$/);
+    if (imageMatch) {
+      // Save any pending text
+      if (currentTextBlock.trim()) {
+        blocks.push({
+          id: Date.now().toString() + "-text-" + i,
+          type: "text",
+          content: currentTextBlock.trim(),
+        });
+        currentTextBlock = "";
+      }
+      // Add image block
+      blocks.push({
+        id: Date.now().toString() + "-img-" + i,
+        type: "image",
+        content: "",
+        imageUrl: imageMatch[2],
+        caption: imageMatch[1] !== "Image" ? imageMatch[1] : "",
+      });
+      continue;
+    }
+
+    // Skip standalone italic caption lines (already part of image)
+    if (/^\*[^*]+\*$/.test(line.trim())) {
+      continue;
+    }
+
+    // Regular text
+    currentTextBlock += line + "\n";
+  }
+
+  // Add remaining text
+  if (currentTextBlock.trim()) {
+    blocks.push({
+      id: Date.now().toString() + "-text-final",
+      type: "text",
+      content: currentTextBlock.trim(),
+    });
+  }
+
+  return blocks.length > 0 ? blocks : [{ id: "1", type: "text", content: "" }];
+};
+
 export default function BlogEditor({
   initialData,
   isEditing = false,
@@ -53,66 +150,39 @@ export default function BlogEditor({
     status: initialData?.status || "draft",
   });
 
-  const [blocks, setBlocks] = useState<BlogBlock[]>(
-    initialData?.blocks || [
-      {
-        id: "1",
-        type: "text",
-        content: initialData?.content || "",
-      },
-    ]
-  );
+  // Use saved blocks if available, otherwise parse content to blocks
+  const [blocks, setBlocks] = useState<BlogBlock[]>(() => {
+    if (initialData?.blocks && initialData.blocks.length > 0) {
+      return initialData.blocks;
+    }
+    return parseContentToBlocks(initialData?.content || "");
+  });
 
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
   const [internalIsSaving, setInternalIsSaving] = useState(false);
   const isSaving =
     externalIsSaving !== undefined ? externalIsSaving : internalIsSaving;
 
-  // AI Assistant State
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiSettings, setAiSettings] = useState({ model: "", context: "" });
+  // Tag selection state
+  const [availableTags, setAvailableTags] = useState<any[]>([]);
+  const [isTagDropdownOpen, setIsTagDropdownOpen] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
 
-  // Load AI settings
+  // Fetch available tags
   useEffect(() => {
-    setAiSettings({
-      model:
-        localStorage.getItem("admin_ai_default_model") ||
-        "model_gemini_2_flash",
-      context: localStorage.getItem("admin_ai_fixed_context") || "",
-    });
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/tags");
+        const data = await response.json();
+        if (data.success) {
+          setAvailableTags(data.tags);
+        }
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+    fetchTags();
   }, []);
-
-  const handleGenerateAI = () => {
-    if (!aiPrompt.trim()) return toast.error("Please enter a prompt");
-    setIsGenerating(true);
-
-    const promise = new Promise((resolve) => {
-      setTimeout(() => {
-        const contextStr = aiSettings.context
-          ? `\n\n> **System Context:** ${aiSettings.context}`
-          : "";
-        const generated = `## Generated Section\n\n${contextStr}\n\nHere is the content generated based on: "${aiPrompt}"...\n\n(This is a simulation of the AI output based on the selected model)`;
-
-        // Add as a new text block
-        const newBlock: BlogBlock = {
-          id: Date.now().toString(),
-          type: "text",
-          content: generated,
-        };
-        setBlocks((prev) => [...prev, newBlock]);
-        resolve(true);
-      }, 2000);
-    });
-
-    toast
-      .promise(promise, {
-        loading: "Generating content with AI...",
-        success: "Content generated successfully!",
-        error: "Failed to generate content",
-      })
-      .finally(() => setIsGenerating(false));
-  };
 
   // Auto-generate slug from title if not editing
   useEffect(() => {
@@ -182,13 +252,17 @@ export default function BlogEditor({
 
   const handleImageUpload = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File is too large (max 5MB)");
+    // Temporary limit: 500KB to prevent MongoDB 16MB document limit
+    // TODO: Implement S3 upload - see docs/S3_Image_Upload_Plan.md
+    if (file.size > 500 * 1024) {
+      toast.error(
+        "File is too large (max 500KB). Please use an external image URL instead, or wait for S3 integration.",
+      );
       return;
     }
 
@@ -207,8 +281,12 @@ export default function BlogEditor({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File is too large (max 5MB)");
+    // Temporary limit: 500KB to prevent MongoDB 16MB document limit
+    // TODO: Implement S3 upload - see docs/S3_Image_Upload_Plan.md
+    if (file.size > 500 * 1024) {
+      toast.error(
+        "Cover image is too large (max 500KB). Please use an external image URL or compress the image.",
+      );
       return;
     }
 
@@ -406,10 +484,10 @@ export default function BlogEditor({
                         block.type === "text"
                           ? "ph-text-aa"
                           : block.type === "image"
-                          ? "ph-image"
-                          : block.type === "code"
-                          ? "ph-code"
-                          : "ph-tree-structure"
+                            ? "ph-image"
+                            : block.type === "code"
+                              ? "ph-code"
+                              : "ph-tree-structure"
                       }`}
                     ></i>
                     {block.type === "file-tree" ? "Structure" : block.type}{" "}
@@ -659,83 +737,157 @@ export default function BlogEditor({
 
         {/* Sidebar Settings Column */}
         <div className="space-y-6">
-          {/* AI Assistant */}
-          <div className="bg-linear-to-br from-indigo-900/40 to-slate-900/50 p-6 rounded-xl border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <i className="ph ph-magic-wand text-xl"></i>
-              </div>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                AI Assistant
-              </h3>
-            </div>
-
-            <div className="mb-4">
-              <label className="block mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Prompt
-              </label>
-              <textarea
-                rows={3}
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                className="block p-3 w-full text-sm text-white bg-slate-950/80 rounded-lg border border-slate-700/50 focus:ring-indigo-500 focus:border-indigo-500 resize-none placeholder:text-slate-600"
-                placeholder="Describe what you want to write..."
-              ></textarea>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleGenerateAI}
-              disabled={isGenerating}
-              className="w-full py-2.5 bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl shadow-lg shadow-indigo-500/20 text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <i className="ph ph-spinner animate-spin"></i> Generating...
-                </>
-              ) : (
-                <>
-                  <i className="ph ph-lightning"></i> Generate Content
-                </>
-              )}
-            </button>
-
-            {/* Config Info */}
-            <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center justify-between text-xs text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <i className="ph ph-cpu"></i>
-                {aiSettings.model || "Default Model"}
-              </span>
-              {aiSettings.context && (
-                <span
-                  className="flex items-center gap-1.5 text-indigo-400/80"
-                  title="Using Global Fixed Context"
-                >
-                  <i className="ph ph-file-text"></i> Context Active
-                </span>
-              )}
-            </div>
-          </div>
-          {/* Summary */}
+          {/* Metadata - Required fields first */}
           <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
-            <h3 className="text-lg font-medium text-white mb-4">Summary</h3>
-            <label className="block mb-2 text-sm font-medium text-slate-400">
-              Description
-            </label>
-            <textarea
-              rows={4}
-              value={formData.summary}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setFormData({ ...formData, summary: e.target.value })
-              }
-              className="block p-2.5 w-full text-sm text-slate-300 bg-slate-900 rounded-lg border border-slate-700 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              placeholder="Brief description for SEO and cards..."
-            ></textarea>
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <i className="ph ph-tag text-blue-400"></i>
+              Metadata
+            </h3>
+
+            <div className="mb-4 relative">
+              <label className="block mb-2 text-sm font-medium text-slate-400">
+                Tags <span className="text-red-400">*</span>
+              </label>
+
+              {/* Selected Tags */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {formData.tags
+                  .split(",")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .map((tagSlug) => {
+                    const tagInfo = availableTags.find(
+                      (t) => t.slug === tagSlug || t.name === tagSlug,
+                    );
+                    return (
+                      <span
+                        key={tagSlug}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 border border-slate-700 text-slate-300"
+                        style={
+                          tagInfo?.color
+                            ? {
+                                borderColor: tagInfo.color + "40",
+                                color: tagInfo.color,
+                                backgroundColor: tagInfo.color + "10",
+                              }
+                            : {}
+                        }
+                      >
+                        {tagInfo?.name || tagSlug}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newTags = formData.tags
+                              .split(",")
+                              .map((t) => t.trim())
+                              .filter((t) => t && t !== tagSlug)
+                              .join(", ");
+                            setFormData({ ...formData, tags: newTags });
+                          }}
+                          className="hover:text-red-400 transition-colors ml-0.5"
+                        >
+                          <i className="ph ph-x"></i>
+                        </button>
+                      </span>
+                    );
+                  })}
+              </div>
+
+              {/* Tag Search Input */}
+              <div className="relative">
+                {isTagDropdownOpen && (
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsTagDropdownOpen(false)}
+                  ></div>
+                )}
+
+                <div className="relative z-50">
+                  <i className="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                  <input
+                    type="text"
+                    value={tagSearch}
+                    onChange={(e) => {
+                      setTagSearch(e.target.value);
+                      setIsTagDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsTagDropdownOpen(true)}
+                    className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-9 p-2.5"
+                    placeholder="Search to add tags..."
+                  />
+
+                  {isTagDropdownOpen && (
+                    <div className="absolute left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
+                      {availableTags
+                        .filter((t) => {
+                          const currentTags = formData.tags
+                            .split(",")
+                            .map((tag) => tag.trim());
+                          return (
+                            !currentTags.includes(t.slug) &&
+                            (t.name
+                              .toLowerCase()
+                              .includes(tagSearch.toLowerCase()) ||
+                              t.slug
+                                .toLowerCase()
+                                .includes(tagSearch.toLowerCase()))
+                          );
+                        })
+                        .map((tag) => (
+                          <button
+                            key={tag._id}
+                            type="button"
+                            onClick={() => {
+                              const currentTags = formData.tags
+                                .split(",")
+                                .map((t) => t.trim())
+                                .filter(Boolean);
+                              const newTags = [...currentTags, tag.slug].join(
+                                ", ",
+                              );
+                              setFormData({ ...formData, tags: newTags });
+                              setTagSearch("");
+                              setIsTagDropdownOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white flex items-center gap-3 transition-colors border-b border-slate-700/50 last:border-0"
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shadow-sm"
+                              style={{ backgroundColor: tag.color }}
+                            ></span>
+                            <span className="font-medium">{tag.name}</span>
+                            <span className="text-xs text-slate-500 ml-auto font-mono opacity-70">
+                              {tag.slug}
+                            </span>
+                          </button>
+                        ))}
+                      {availableTags.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-slate-500 text-center">
+                          No tags available. Create one in Tags Management.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium text-slate-400">
+                Author
+              </label>
+              <div className="flex items-center gap-3 p-3 bg-slate-900 rounded-lg border border-slate-700">
+                <span className="text-sm font-medium text-white">
+                  {formData.authorName}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Featured Image */}
           <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
-            <h3 className="text-lg font-medium text-white mb-4">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <i className="ph ph-image text-emerald-400"></i>
               Featured Image
             </h3>
             <div className="mb-4">
@@ -797,35 +949,24 @@ export default function BlogEditor({
             </div>
           </div>
 
-          {/* Metadata */}
+          {/* Summary */}
           <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-800">
-            <h3 className="text-lg font-medium text-white mb-4">Metadata</h3>
-
-            <div className="mb-4">
-              <label className="block mb-2 text-sm font-medium text-slate-400">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                value={formData.tags}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFormData({ ...formData, tags: e.target.value })
-                }
-                className="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="tech, ai, tutorial"
-              />
-            </div>
-
-            <div>
-              <label className="block mb-2 text-sm font-medium text-slate-400">
-                Author
-              </label>
-              <div className="flex items-center gap-3 p-3 bg-slate-900 rounded-lg border border-slate-700">
-                <span className="text-sm font-medium text-white">
-                  {formData.authorName}
-                </span>
-              </div>
-            </div>
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+              <i className="ph ph-text-align-left text-violet-400"></i>
+              Summary
+            </h3>
+            <label className="block mb-2 text-sm font-medium text-slate-400">
+              Description (for SEO)
+            </label>
+            <textarea
+              rows={4}
+              value={formData.summary}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setFormData({ ...formData, summary: e.target.value })
+              }
+              className="block p-2.5 w-full text-sm text-slate-300 bg-slate-900 rounded-lg border border-slate-700 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              placeholder="Brief description for SEO and cards..."
+            ></textarea>
           </div>
         </div>
       </div>

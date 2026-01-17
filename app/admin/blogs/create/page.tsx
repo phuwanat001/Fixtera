@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import BlogEditor from "../../components/BlogEditor";
+import DragDropBlogEditor from "../../components/DragDropBlogEditor";
 import AdminPageLayout from "../../components/AdminPageLayout";
 import { useAuth } from "../../../lib/auth-context";
 
@@ -44,7 +44,7 @@ export default function CreateBlogPage() {
 
   return (
     <AdminPageLayout activeTab="blogs">
-      <BlogEditor onSave={handleSave} isSaving={isSaving} />
+      <DragDropBlogEditor onSave={handleSave} isSaving={isSaving} />
     </AdminPageLayout>
   );
 }

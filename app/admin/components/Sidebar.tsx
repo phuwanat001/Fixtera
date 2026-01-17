@@ -55,9 +55,11 @@ export default function Sidebar({
       >
         {/* Logo */}
         <div className="h-20 flex items-center px-8 border-b border-slate-800">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold mr-3 shadow-lg shadow-cyan-500/20">
-            F
-          </div>
+          <img
+            src="/fixtera.jpg"
+            alt="FixTera"
+            className="w-10 h-10 rounded-xl object-cover mr-3 shadow-lg shadow-cyan-500/20"
+          />
           <h1 className="text-xl font-bold text-white tracking-tight">
             Fixtera{" "}
             <span className="text-slate-500 font-medium text-xs uppercase tracking-wider ml-1">

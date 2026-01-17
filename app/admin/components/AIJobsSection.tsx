@@ -1,11 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-
-// Import mock data
-import jobsData from "@/mockdata/admin/aiJobs.json";
-import modelsData from "@/mockdata/admin/aiModels.json";
-import blogPostsData from "@/mockdata/admin/blogPosts.json";
+import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 interface AIJob {
   _id: string;
@@ -32,7 +28,44 @@ const statusStyles: Record<string, string> = {
 
 export default function AIJobsSection() {
   const [activeFilter, setActiveFilter] = useState("all");
-  const [jobs] = useState<AIJob[]>(jobsData);
+  const [jobs, setJobs] = useState<AIJob[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [models, setModels] = useState<any[]>([]);
+  const [blogs, setBlogs] = useState<any[]>([]);
+
+  // Fetch jobs and related data
+  const fetchData = async () => {
+    try {
+      const [jobsRes, modelsRes, blogsRes] = await Promise.all([
+        fetch("/api/ai-jobs"),
+        fetch("/api/ai-models"),
+        fetch("/api/blogs?limit=100"),
+      ]);
+
+      const jobsData = await jobsRes.json();
+      const modelsData = await modelsRes.json();
+      const blogsData = await blogsRes.json();
+
+      if (jobsData.success) {
+        setJobs(jobsData.jobs);
+      }
+      if (modelsData.success) {
+        setModels(modelsData.models);
+      }
+      if (blogsData.blogs) {
+        setBlogs(blogsData.blogs);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load AI jobs");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredJobs =
     activeFilter === "all"
@@ -40,12 +73,14 @@ export default function AIJobsSection() {
       : jobs.filter((job) => job.status === activeFilter);
 
   const getModelName = (modelId: string) => {
-    const model = modelsData.find((m) => m._id === modelId);
+    const model = models.find(
+      (m) => m._id === modelId || m.modelKey === modelId
+    );
     return model?.displayName || modelId;
   };
 
   const getBlogTitle = (blogId: string) => {
-    const blog = blogPostsData.find((b) => b._id === blogId);
+    const blog = blogs.find((b) => b._id === blogId);
     return blog?.title || blogId;
   };
 
@@ -64,6 +99,14 @@ export default function AIJobsSection() {
       minute: "2-digit",
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -89,7 +132,7 @@ export default function AIJobsSection() {
               left: `calc(0.25rem + ${
                 ["all", "success", "failed", "pending"].indexOf(activeFilter) *
                 0.25
-              }rem)`, // Adjust for gap
+              }rem)`,
             }}
           ></div>
           {["all", "success", "failed", "pending"].map((filter) => (
@@ -139,7 +182,9 @@ export default function AIJobsSection() {
             Total Tokens
           </p>
           <p className="text-3xl font-bold text-cyan-400 tracking-tight">
-            {jobs.reduce((acc, j) => acc + j.totalTokens, 0).toLocaleString()}
+            {jobs
+              .reduce((acc, j) => acc + (j.totalTokens || 0), 0)
+              .toLocaleString()}
           </p>
         </div>
       </div>
@@ -198,10 +243,10 @@ export default function AIJobsSection() {
                     <td className="px-6 py-4">
                       <div className="text-sm">
                         <span className="text-white font-medium">
-                          {job.totalTokens.toLocaleString()}
+                          {(job.totalTokens || 0).toLocaleString()}
                         </span>
                         <span className="text-slate-500 text-xs ml-1 block">
-                          I: {job.inputTokens} • O: {job.outputTokens}
+                          I: {job.inputTokens || 0} • O: {job.outputTokens || 0}
                         </span>
                       </div>
                     </td>
@@ -227,9 +272,12 @@ export default function AIJobsSection() {
                   <td colSpan={7} className="p-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center">
-                        <i className="ph ph-magnifying-glass text-xl"></i>
+                        <i className="ph ph-lightning text-xl"></i>
                       </div>
-                      <p>No {activeFilter} jobs found</p>
+                      <p>
+                        No {activeFilter === "all" ? "" : activeFilter} jobs
+                        found
+                      </p>
                     </div>
                   </td>
                 </tr>

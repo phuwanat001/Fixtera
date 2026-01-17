@@ -55,12 +55,20 @@ export default function Navbar() {
           <div className="px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
-              <div className="flex-shrink-0 cursor-pointer group">
+              <a
+                href="/"
+                className="flex-shrink-0 cursor-pointer group flex items-center gap-2"
+              >
+                <img
+                  src="/fixtera.jpg"
+                  alt="FixTera"
+                  className="w-8 h-8 rounded-lg object-cover"
+                />
                 <span className="text-xl md:text-2xl font-bold font-mono tracking-tighter text-white">
                   Fix<span className="text-brand-cyan">Tera</span>
                   <span className="text-brand-blue">.</span>
                 </span>
-              </div>
+              </a>
 
               {/* Desktop Menu */}
               <div className="hidden md:block">
@@ -124,15 +132,23 @@ export default function Navbar() {
                       <span className="text-sm font-medium text-white max-w-[120px] truncate">
                         {user.displayName?.split(" ")[0] || "User"}
                       </span>
-                      <i className={`fas fa-chevron-down text-xs text-slate-400 transition-transform ${showUserMenu ? "rotate-180" : ""}`}></i>
+                      <i
+                        className={`fas fa-chevron-down text-xs text-slate-400 transition-transform ${
+                          showUserMenu ? "rotate-180" : ""
+                        }`}
+                      ></i>
                     </button>
 
                     {/* User Dropdown Menu */}
                     {showUserMenu && (
                       <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-xl shadow-xl shadow-black/30 overflow-hidden z-50">
                         <div className="px-4 py-3 border-b border-slate-700/50">
-                          <p className="text-sm font-medium text-white truncate">{user.displayName}</p>
-                          <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                          <p className="text-sm font-medium text-white truncate">
+                            {user.displayName}
+                          </p>
+                          <p className="text-xs text-slate-400 truncate">
+                            {user.email}
+                          </p>
                         </div>
                         {isAdmin && (
                           <a
@@ -195,9 +211,16 @@ export default function Navbar() {
         }`}
       >
         <div className="p-6 flex justify-between items-center border-b border-slate-800">
-          <span className="text-xl font-bold font-mono tracking-tighter text-white">
-            Fix<span className="text-brand-cyan">Tera</span>.
-          </span>
+          <a href="/" className="flex items-center gap-2">
+            <img
+              src="/fixtera.jpg"
+              alt="FixTera"
+              className="w-8 h-8 rounded-lg object-cover"
+            />
+            <span className="text-xl font-bold font-mono tracking-tighter text-white">
+              Fix<span className="text-brand-cyan">Tera</span>.
+            </span>
+          </a>
           <button
             onClick={toggleMenu}
             className="text-slate-400 hover:text-white transition-colors"
@@ -262,23 +285,37 @@ export default function Navbar() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl">
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName || "User"} className="w-10 h-10 rounded-full" />
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || "User"}
+                    className="w-10 h-10 rounded-full"
+                  />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold">
                     {user.displayName?.charAt(0) || "U"}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user.displayName}</p>
-                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                  <p className="text-sm font-medium text-white truncate">
+                    {user.displayName}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {user.email}
+                  </p>
                 </div>
               </div>
               {isAdmin && (
-                <a href="/admin" className="block w-full text-center px-5 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors">
+                <a
+                  href="/admin"
+                  className="block w-full text-center px-5 py-3 rounded-xl font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+                >
                   Admin Panel
                 </a>
               )}
-              <button onClick={handleSignOut} className="block w-full text-center px-5 py-3 rounded-xl font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors">
+              <button
+                onClick={handleSignOut}
+                className="block w-full text-center px-5 py-3 rounded-xl font-bold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+              >
                 Sign out
               </button>
             </div>

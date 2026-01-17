@@ -137,24 +137,48 @@ export default function AIConfigsSection() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this context?")) return;
+    const context = contexts.find((c) => c._id === id);
 
-    try {
-      const response = await fetch(`/api/ai-contexts?id=${id}`, {
-        method: "DELETE",
-      });
-      const data = await response.json();
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <span>Delete context "{context?.name}"?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  const response = await fetch(`/api/ai-contexts?id=${id}`, {
+                    method: "DELETE",
+                  });
+                  const data = await response.json();
 
-      if (data.success) {
-        toast.success("Context deleted!");
-        fetchContexts();
-      } else {
-        toast.error(data.error || "Failed to delete context");
-      }
-    } catch (error) {
-      console.error("Error deleting context:", error);
-      toast.error("Failed to delete context");
-    }
+                  if (data.success) {
+                    toast.success("Context deleted!");
+                    fetchContexts();
+                  } else {
+                    toast.error(data.error || "Failed to delete context");
+                  }
+                } catch (error) {
+                  console.error("Error deleting context:", error);
+                  toast.error("Failed to delete context");
+                }
+              }}
+              className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-slate-600 text-white rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 10000 }
+    );
   };
 
   const handleSetDefault = async (context: AIContext) => {
@@ -188,7 +212,9 @@ export default function AIConfigsSection() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-tight">AI Context Templates</h2>
+          <h2 className="text-xl font-bold text-white tracking-tight">
+            AI Context Templates
+          </h2>
           <p className="text-sm text-slate-400 mt-1">
             Manage fixed prompts and contexts for AI blog generation
           </p>
@@ -208,8 +234,12 @@ export default function AIConfigsSection() {
           <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-4">
             <i className="ph ph-brain text-3xl text-slate-500"></i>
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">No AI Contexts Yet</h3>
-          <p className="text-sm text-slate-400 mb-6">Create your first AI context template to get started</p>
+          <h3 className="text-lg font-bold text-white mb-2">
+            No AI Contexts Yet
+          </h3>
+          <p className="text-sm text-slate-400 mb-6">
+            Create your first AI context template to get started
+          </p>
           <button
             onClick={() => handleOpenModal()}
             className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl text-sm font-semibold transition-colors"
@@ -228,16 +258,24 @@ export default function AIConfigsSection() {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${
-                  context.isDefault 
-                    ? "bg-cyan-500/20 border-cyan-500/30" 
-                    : "bg-slate-800 border-slate-700"
-                }`}>
-                  <i className={`ph ph-brain text-xl ${context.isDefault ? "text-cyan-400" : "text-slate-400"}`}></i>
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center border ${
+                    context.isDefault
+                      ? "bg-cyan-500/20 border-cyan-500/30"
+                      : "bg-slate-800 border-slate-700"
+                  }`}
+                >
+                  <i
+                    className={`ph ph-brain text-xl ${
+                      context.isDefault ? "text-cyan-400" : "text-slate-400"
+                    }`}
+                  ></i>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-white text-lg">{context.name}</h3>
+                    <h3 className="font-bold text-white text-lg">
+                      {context.name}
+                    </h3>
                     {context.isDefault && (
                       <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wide rounded-full bg-cyan-950/50 text-cyan-400 border border-cyan-500/20">
                         Default
@@ -245,8 +283,10 @@ export default function AIConfigsSection() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    {CATEGORIES.find(c => c.value === context.category)?.label || context.category}
-                    {" • "}{context.usageCount || 0} uses
+                    {CATEGORIES.find((c) => c.value === context.category)
+                      ?.label || context.category}
+                    {" • "}
+                    {context.usageCount || 0} uses
                   </p>
                 </div>
               </div>
@@ -276,12 +316,16 @@ export default function AIConfigsSection() {
             </div>
 
             {context.description && (
-              <p className="text-sm text-slate-400 mb-4 line-clamp-2">{context.description}</p>
+              <p className="text-sm text-slate-400 mb-4 line-clamp-2">
+                {context.description}
+              </p>
             )}
 
             {/* System Prompt Preview */}
             <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800/50">
-              <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">System Prompt</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 mb-2">
+                System Prompt
+              </p>
               <p className="text-sm text-slate-300 line-clamp-3 leading-relaxed font-mono opacity-80">
                 {context.systemPrompt}
               </p>
@@ -289,8 +333,12 @@ export default function AIConfigsSection() {
 
             {/* User Prompt Template */}
             <div className="mt-3 p-3 bg-slate-950/30 rounded-lg border border-slate-800/30">
-              <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">User Prompt Template</p>
-              <p className="text-xs text-slate-400 font-mono">{context.userPromptTemplate}</p>
+              <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">
+                User Prompt Template
+              </p>
+              <p className="text-xs text-slate-400 font-mono">
+                {context.userPromptTemplate}
+              </p>
             </div>
           </div>
         ))}
@@ -310,24 +358,34 @@ export default function AIConfigsSection() {
               {/* Name & Category */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Name *</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                    Name *
+                  </label>
                   <input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                     placeholder="e.g., Tech Blog Writer"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Category</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                    Category
+                  </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                   >
                     {CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -335,11 +393,15 @@ export default function AIConfigsSection() {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Description</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                  Description
+                </label>
                 <input
                   type="text"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-cyan-500 focus:outline-none"
                   placeholder="Short description of this context"
                 />
@@ -347,10 +409,14 @@ export default function AIConfigsSection() {
 
               {/* System Prompt */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">System Prompt *</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                  System Prompt *
+                </label>
                 <textarea
                   value={formData.systemPrompt}
-                  onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, systemPrompt: e.target.value })
+                  }
                   rows={6}
                   className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-cyan-500 focus:outline-none resize-none font-mono text-sm"
                   placeholder="You are a professional tech writer..."
@@ -361,12 +427,19 @@ export default function AIConfigsSection() {
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
                   User Prompt Template
-                  <span className="text-slate-500 font-normal ml-2">Use {"{{topic}}"} as placeholder</span>
+                  <span className="text-slate-500 font-normal ml-2">
+                    Use {"{{topic}}"} as placeholder
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={formData.userPromptTemplate}
-                  onChange={(e) => setFormData({ ...formData, userPromptTemplate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      userPromptTemplate: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-white focus:border-cyan-500 focus:outline-none font-mono text-sm"
                   placeholder="Write a blog about: {{topic}}"
                 />
@@ -378,7 +451,9 @@ export default function AIConfigsSection() {
                   <input
                     type="checkbox"
                     checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isActive: e.target.checked })
+                    }
                     className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
                   />
                   <span className="text-sm text-slate-300">Active</span>
@@ -387,7 +462,9 @@ export default function AIConfigsSection() {
                   <input
                     type="checkbox"
                     checked={formData.isDefault}
-                    onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isDefault: e.target.checked })
+                    }
                     className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500"
                   />
                   <span className="text-sm text-slate-300">Set as Default</span>

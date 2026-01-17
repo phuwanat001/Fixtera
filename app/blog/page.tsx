@@ -1,74 +1,174 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BlogCard from "../components/BlogCard";
 
-export default function BlogArchivePage() {
-  const [allBlogs, setAllBlogs] = useState<any[]>([]);
+interface Tag {
+  _id?: string;
+  name: string;
+  slug: string;
+  color?: string;
+}
+
+interface Blog {
+  _id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  content?: string;
+  coverImage?: string;
+  tags: (string | Tag)[];
+  publishedAt: string;
+  readingTime?: number;
+  views?: number;
+}
+
+function BlogContent() {
+  const searchParams = useSearchParams();
+  const [allBlogs, setAllBlogs] = useState<Blog[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch blogs from API
+  // Read tag from URL on mount
   useEffect(() => {
-    async function fetchBlogs() {
+    const tagFromUrl = searchParams.get("tag");
+    if (tagFromUrl) {
+      setSelectedTag(tagFromUrl);
+    }
+  }, [searchParams]);
+
+  // Fetch blogs and tags from API
+  useEffect(() => {
+    async function fetchData() {
       try {
-        const response = await fetch("/api/blogs?status=published");
-        const data = await response.json();
-        if (data.blogs) {
-          // Calculate reading time if not present
-          const processedBlogs = data.blogs.map((blog: any) => ({
+        // Fetch both blogs and tags in parallel
+        const [blogsResponse, tagsResponse] = await Promise.all([
+          fetch("/api/blogs?status=published"),
+          fetch("/api/tags"),
+        ]);
+
+        const blogsData = await blogsResponse.json();
+        const tagsData = await tagsResponse.json();
+
+        if (blogsData.blogs) {
+          // Process blogs
+          const processedBlogs = blogsData.blogs.map((blog: any) => ({
             ...blog,
             readingTime:
               blog.readingTime ||
-              Math.ceil((blog.content?.length || 0) / 1000) ||
-              5, // Rough estimate
-            tags: Array.isArray(blog.tags)
-              ? blog.tags.map((t: any) =>
-                  typeof t === "string"
-                    ? { name: t, slug: t, color: "#4F46E5" }
-                    : t
-                )
-              : [],
+              Math.max(
+                1,
+                Math.ceil((blog.content?.split(/\s+/).length || 0) / 200)
+              ) ||
+              5, // ~200 words per minute
           }));
           setAllBlogs(processedBlogs);
         }
+
+        if (tagsData.success && tagsData.tags) {
+          setAllTags(tagsData.tags);
+        }
       } catch (error) {
-        console.error("Error fetching blogs:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     }
-    fetchBlogs();
+    fetchData();
   }, []);
 
-  // Extract all unique tags
-  const allTags = useMemo(() => {
-    const tags = new Map();
-    allBlogs.forEach((blog) => {
-      blog.tags.forEach((tag: any) => {
-        if (!tags.has(tag.slug)) {
-          tags.set(tag.slug, tag);
-        }
-      });
+  // Helper function to check if blog has a specific tag
+  const blogHasTag = (blog: Blog, tagSlug: string): boolean => {
+    if (!blog.tags || !Array.isArray(blog.tags)) return false;
+
+    return blog.tags.some((tag) => {
+      if (typeof tag === "string") {
+        // Tag is stored as string - check both as slug and name
+        const normalizedTag = tag.toLowerCase().replace(/\s+/g, "-");
+        const normalizedSlug = tagSlug.toLowerCase();
+        return (
+          normalizedTag === normalizedSlug ||
+          tag.toLowerCase() === normalizedSlug ||
+          tag.toLowerCase() === tagSlug.toLowerCase().replace(/-/g, " ")
+        );
+      } else if (tag && typeof tag === "object") {
+        // Tag is stored as object
+        return (
+          tag.slug === tagSlug ||
+          tag.name?.toLowerCase() === tagSlug.toLowerCase()
+        );
+      }
+      return false;
     });
-    return Array.from(tags.values());
-  }, [allBlogs]);
+  };
+
+  // Get tag color from allTags
+  const getTagColor = (tagSlugOrName: string | Tag): string => {
+    if (typeof tagSlugOrName === "object" && tagSlugOrName.color) {
+      return tagSlugOrName.color;
+    }
+
+    const slug =
+      typeof tagSlugOrName === "string"
+        ? tagSlugOrName.toLowerCase().replace(/\s+/g, "-")
+        : tagSlugOrName.slug;
+
+    const foundTag = allTags.find(
+      (t) => t.slug === slug || t.name?.toLowerCase() === slug
+    );
+    return foundTag?.color || "#4F46E5";
+  };
+
+  // Get tag name from slug
+  const getTagName = (blog: Blog): string => {
+    if (!blog.tags || blog.tags.length === 0) return "Tech";
+
+    const firstTag = blog.tags[0];
+    if (typeof firstTag === "string") {
+      // Find the proper name from allTags
+      const foundTag = allTags.find(
+        (t) =>
+          t.slug === firstTag.toLowerCase().replace(/\s+/g, "-") ||
+          t.name.toLowerCase() === firstTag.toLowerCase()
+      );
+      return foundTag?.name || firstTag;
+    } else if (firstTag && typeof firstTag === "object") {
+      return firstTag.name || "Tech";
+    }
+    return "Tech";
+  };
 
   // Filter blogs
   const filteredBlogs = useMemo(() => {
     return allBlogs.filter((blog) => {
       const matchesSearch =
         blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        blog.summary.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTag = selectedTag
-        ? blog.tags.some((tag: any) => tag.slug === selectedTag)
-        : true;
+        blog.summary?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesTag = selectedTag ? blogHasTag(blog, selectedTag) : true;
+
       return matchesSearch && matchesTag;
     });
-  }, [allBlogs, searchQuery, selectedTag]);
+  }, [allBlogs, searchQuery, selectedTag, allTags]);
+
+  // Handle tag click - update URL
+  const handleTagClick = (tagSlug: string | null) => {
+    setSelectedTag(tagSlug);
+
+    // Update URL without page reload
+    const url = new URL(window.location.href);
+    if (tagSlug) {
+      url.searchParams.set("tag", tagSlug);
+    } else {
+      url.searchParams.delete("tag");
+    }
+    window.history.pushState({}, "", url.toString());
+  };
 
   return (
     <>
@@ -105,7 +205,7 @@ export default function BlogArchivePage() {
               {/* Tags Filter */}
               <div className="flex flex-wrap justify-center gap-2">
                 <button
-                  onClick={() => setSelectedTag(null)}
+                  onClick={() => handleTagClick(null)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     selectedTag === null
                       ? "bg-white text-slate-950 shadow-lg shadow-white/10 scale-105"
@@ -114,30 +214,35 @@ export default function BlogArchivePage() {
                 >
                   All Posts
                 </button>
-                {allTags.map((tag) => (
-                  <button
-                    key={tag.slug}
-                    onClick={() =>
-                      setSelectedTag(selectedTag === tag.slug ? null : tag.slug)
-                    }
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-                      selectedTag === tag.slug
-                        ? "text-white shadow-lg scale-105"
-                        : "bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
-                    }`}
-                    style={
-                      selectedTag === tag.slug
-                        ? {
-                            backgroundColor: `${tag.color}20`,
-                            borderColor: tag.color,
-                            color: tag.color === "#000000" ? "#fff" : tag.color, // Handle black color override if needed, though we fixed json
-                          }
-                        : {}
-                    }
-                  >
-                    {tag.name}
-                  </button>
-                ))}
+                {allTags.map((tag) => {
+                  const isSelected = selectedTag === tag.slug;
+                  const color = tag.color || "#4F46E5";
+
+                  return (
+                    <button
+                      key={tag.slug}
+                      onClick={() =>
+                        handleTagClick(isSelected ? null : tag.slug)
+                      }
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                        isSelected
+                          ? "text-white shadow-lg scale-105"
+                          : "bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white"
+                      }`}
+                      style={
+                        isSelected
+                          ? {
+                              backgroundColor: `${color}20`,
+                              borderColor: color,
+                              color: color,
+                            }
+                          : {}
+                      }
+                    >
+                      {tag.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -151,23 +256,51 @@ export default function BlogArchivePage() {
             </div>
           ) : filteredBlogs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredBlogs.map((blog) => (
-                <BlogCard
-                  key={blog.slug}
-                  slug={blog.slug}
-                  image={blog.coverImage}
-                  category={blog.tags[0]?.name || "Tech"}
-                  categoryColor={`text-[${blog.tags[0]?.color || "#4F46E5"}]`}
-                  date={new Date(blog.publishedAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "2-digit",
-                    year: "numeric",
-                  })}
-                  readTime={`${blog.readingTime} min read`}
-                  title={blog.title}
-                  excerpt={blog.summary}
-                />
-              ))}
+              {filteredBlogs.map((blog) => {
+                // Convert blog tags to proper format with colors
+                const blogTags = (blog.tags || []).map((tag) => {
+                  if (typeof tag === "string") {
+                    const foundTag = allTags.find(
+                      (t) =>
+                        t.slug === tag.toLowerCase().replace(/\s+/g, "-") ||
+                        t.name.toLowerCase() === tag.toLowerCase()
+                    );
+                    return {
+                      name: foundTag?.name || tag,
+                      slug:
+                        foundTag?.slug ||
+                        tag.toLowerCase().replace(/\s+/g, "-"),
+                      color: foundTag?.color || "#4F46E5",
+                    };
+                  }
+                  // Already an object, just ensure color
+                  const foundTag = allTags.find((t) => t.slug === tag.slug);
+                  return {
+                    ...tag,
+                    color: tag.color || foundTag?.color || "#4F46E5",
+                  };
+                });
+
+                return (
+                  <BlogCard
+                    key={blog.slug}
+                    slug={blog.slug}
+                    image={blog.coverImage || ""}
+                    tags={blogTags}
+                    date={new Date(blog.publishedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "2-digit",
+                        year: "numeric",
+                      }
+                    )}
+                    views={blog.views || 0}
+                    title={blog.title}
+                    excerpt={blog.summary}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-20">
@@ -178,13 +311,14 @@ export default function BlogArchivePage() {
                 No articles found
               </h3>
               <p className="text-slate-400">
-                Try adjusting your search or filter to find what you're looking
-                for.
+                {selectedTag
+                  ? `No articles found with tag "${selectedTag}"`
+                  : "Try adjusting your search or filter to find what you're looking for."}
               </p>
               <button
                 onClick={() => {
                   setSearchQuery("");
-                  setSelectedTag(null);
+                  handleTagClick(null);
                 }}
                 className="mt-6 text-brand-cyan hover:text-brand-blue font-medium"
               >
@@ -195,5 +329,19 @@ export default function BlogArchivePage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function BlogArchivePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-cyan"></div>
+        </div>
+      }
+    >
+      <BlogContent />
+    </Suspense>
   );
 }

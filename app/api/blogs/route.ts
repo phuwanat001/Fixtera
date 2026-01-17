@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     const blogs = await blogsCollection
       .find(query)
-      .sort({ publishedAt: -1, createdAt: -1 })
+      .sort({ isFixed: -1, publishedAt: -1, createdAt: -1 })
       .limit(limit)
       .toArray();
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching blogs:", error);
     return NextResponse.json(
       { error: "Failed to fetch blogs" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       summary,
       content,
       blocks,
+      sections, // New: grid-based sections from drag-drop editor
       coverImage,
       tags,
       author,
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (!title || !content) {
       return NextResponse.json(
         { error: "Title and content are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (existingBlog) {
       return NextResponse.json(
         { error: "Slug already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
       summary: summary || "",
       content,
       blocks: blocks || [],
+      sections: sections || [], // New: grid-based sections
       coverImage: coverImage || "",
       tags: tags || [],
       author: author || "Admin",
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating blog:", error);
     return NextResponse.json(
       { error: "Failed to create blog" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -141,7 +143,7 @@ export async function PUT(request: NextRequest) {
     if (!_id) {
       return NextResponse.json(
         { error: "Blog ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -157,7 +159,7 @@ export async function PUT(request: NextRequest) {
 
     const result = await blogsCollection.updateOne(
       { _id: new ObjectId(_id) },
-      { $set: updateData }
+      { $set: updateData },
     );
 
     if (result.matchedCount === 0) {
@@ -172,7 +174,7 @@ export async function PUT(request: NextRequest) {
     console.error("Error updating blog:", error);
     return NextResponse.json(
       { error: "Failed to update blog" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -186,7 +188,7 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { error: "Blog ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -207,7 +209,7 @@ export async function DELETE(request: NextRequest) {
     console.error("Error deleting blog:", error);
     return NextResponse.json(
       { error: "Failed to delete blog" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

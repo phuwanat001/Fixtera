@@ -38,7 +38,7 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "FixTera | Fix problems. Build smarter. Learn faster.",
+  title: "FixTera",
   description:
     "A developer-first knowledge hub featuring deep dives into programming, AI engineering, and real-world debugging stories.",
 };

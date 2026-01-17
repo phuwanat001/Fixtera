@@ -9,7 +9,7 @@ import StatCard from "./components/StatCard";
 import TrafficChart from "./components/TrafficChart";
 import RecentBlogs from "./components/RecentBlogs";
 import BlogsTable from "./components/BlogsTable";
-import TagCard from "./components/TagCard";
+import TagsSection from "./components/TagsSection";
 import NotificationItem from "./components/NotificationItem";
 import NotificationModal from "./components/NotificationModal";
 import AIStatCard from "./components/AIStatCard";
@@ -21,9 +21,18 @@ import AIJobsSection from "./components/AIJobsSection";
 import ReviewsSection from "./components/ReviewsSection";
 import { useSearchParams, useRouter } from "next/navigation";
 
-// Import mock data
-import tagsData from "@/mockdata/admin/tags.json";
-import initialNotificationsData from "@/mockdata/admin/notifications.json";
+// Notification interface
+interface Notification {
+  _id: string;
+  id?: string;
+  title: string;
+  message: string;
+  type: string;
+  icon: string;
+  isUnread: boolean;
+  time: string;
+  link?: string | null;
+}
 
 const pageTitles: Record<string, string> = {
   dashboard: "Dashboard",
@@ -37,43 +46,24 @@ const pageTitles: Record<string, string> = {
   notifications: "Notifications",
 };
 
-const statsData = [
-  {
-    title: "Total Blogs",
-    value: "1,248",
-    icon: "article",
-    iconColor: "text-fixtera-blue",
-    iconBg: "bg-fixtera-blue/10",
-    trend: { value: "12%", isPositive: true, label: "vs last month" },
-  },
-  {
-    title: "Total Views",
-    value: "45.2k",
-    icon: "eye",
-    iconColor: "text-purple-400",
-    iconBg: "bg-purple-500/10",
-    trend: { value: "8.5%", isPositive: true, label: "vs last month" },
-  },
-  {
-    title: "Active Tags",
-    value: "64",
-    icon: "hash",
-    iconColor: "text-fixtera-cyan",
-    iconBg: "bg-fixtera-cyan/10",
-    badge: { text: "Global Categories", color: "text-slate-500" },
-  },
-  {
-    title: "Pending Reviews",
-    value: "8",
-    icon: "warning-circle",
-    iconColor: "text-orange-400",
-    iconBg: "bg-orange-500/10",
-    badge: {
-      text: "Low Priority",
-      color: "text-orange-400 font-medium bg-orange-400/10",
-    },
-  },
-];
+// Default stats structure
+interface DashboardStats {
+  blogs: {
+    total: number;
+    published: number;
+    draft: number;
+    review: number;
+    pendingReview: number;
+  };
+  views: {
+    total: number;
+    formatted: string;
+  };
+  tags: {
+    total: number;
+  };
+  pendingReviews: number;
+}
 
 function AdminContent() {
   const router = useRouter();
@@ -82,13 +72,56 @@ function AdminContent() {
   const [blogSearch, setBlogSearch] = useState("");
   const searchParams = useSearchParams();
 
+  // Dashboard Stats State
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/admin/stats");
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.stats);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   // Notification State
-  const [notifications, setNotifications] = useState(initialNotificationsData);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [filterType, setFilterType] = useState<"all" | "unread">("all");
 
   // Notification Modal State
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [editingNotif, setEditingNotif] = useState<any>(null);
+
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("/api/notifications");
+        const data = await response.json();
+        if (data.success) {
+          setNotifications(
+            data.notifications.map((n: any) => ({ ...n, id: n._id })),
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setNotificationsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const unreadCount = notifications.filter((n) => n.isUnread).length;
 
@@ -97,19 +130,58 @@ function AdminContent() {
     return true;
   });
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isUnread: false } : n))
-    );
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ _id: id, isUnread: false }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === id || n._id === id ? { ...n, isUnread: false } : n,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
   };
 
-  const handleDeleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  const handleDeleteNotification = async (id: string) => {
+    try {
+      const response = await fetch(`/api/notifications?id=${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== id && n._id !== id),
+        );
+        toast.success("Notification deleted");
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast.error("Failed to delete notification");
+    }
   };
 
-  const handleClearAll = () => {
-    setNotifications([]);
-    toast.success("All notifications cleared");
+  const handleClearAll = async () => {
+    try {
+      const response = await fetch("/api/notifications?clearAll=true", {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotifications([]);
+        toast.success("All notifications cleared");
+      }
+    } catch (error) {
+      console.error("Error clearing notifications:", error);
+      toast.error("Failed to clear notifications");
+    }
   };
 
   // Handler to open modal for creating new notification
@@ -128,20 +200,48 @@ function AdminContent() {
   };
 
   // Handler to save notification from modal
-  const handleSaveNotification = (data: any) => {
-    if (editingNotif) {
-      // Update existing
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === editingNotif.id ? { ...n, ...data } : n))
-      );
-    } else {
-      // Create new
-      const newNotif = {
-        id: Date.now().toString(),
-        time: "Just now",
-        ...data,
-      };
-      setNotifications((prev) => [newNotif, ...prev]);
+  const handleSaveNotification = async (data: any) => {
+    try {
+      if (editingNotif) {
+        // Update existing
+        const response = await fetch("/api/notifications", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            _id: editingNotif._id || editingNotif.id,
+            ...data,
+          }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === editingNotif.id || n._id === editingNotif._id
+                ? { ...n, ...data }
+                : n,
+            ),
+          );
+          toast.success("Notification updated");
+        }
+      } else {
+        // Create new
+        const response = await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (result.success) {
+          setNotifications((prev) => [
+            { ...result.notification, id: result.notification._id },
+            ...prev,
+          ]);
+          toast.success("Notification created");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving notification:", error);
+      toast.error("Failed to save notification");
     }
     setIsNotifModalOpen(false);
   };
@@ -195,54 +295,29 @@ function AdminContent() {
             {/* AI Status Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <AIStatCard
-                title="AI Jobs Today"
-                total={29}
-                icon="lightning"
-                iconColor="text-amber-400"
-                iconBg="bg-amber-500/10"
-                breakdown={[
-                  {
-                    label: "Success",
-                    value: 24,
-                    color: "text-green-400",
-                    icon: "check-circle",
-                  },
-                  {
-                    label: "Failed",
-                    value: 2,
-                    color: "text-red-400",
-                    icon: "warning",
-                  },
-                  {
-                    label: "Processing",
-                    value: 3,
-                    color: "text-blue-400",
-                    icon: "spinner",
-                  },
-                ]}
-              />
-              <AIStatCard
-                title="Blog Status"
-                total={1248}
+                title="Total Blogs"
+                total={statsLoading ? 0 : stats?.blogs.total || 0}
                 icon="article"
                 iconColor="text-fixtera-blue"
                 iconBg="bg-fixtera-blue/10"
                 breakdown={[
                   {
                     label: "Published",
-                    value: 856,
+                    value: stats?.blogs.published || 0,
                     color: "text-green-400",
                     icon: "globe",
                   },
                   {
                     label: "Drafts",
-                    value: 342,
+                    value: stats?.blogs.draft || 0,
                     color: "text-yellow-400",
                     icon: "pencil",
                   },
                   {
                     label: "In Review",
-                    value: 50,
+                    value:
+                      (stats?.blogs.review || 0) +
+                      (stats?.blogs.pendingReview || 0),
                     color: "text-purple-400",
                     icon: "eye",
                   },
@@ -250,25 +325,36 @@ function AdminContent() {
               />
               <StatCard
                 title="Total Views"
-                value="45.2k"
+                value={statsLoading ? "..." : stats?.views.formatted || "0"}
                 icon="eye"
                 iconColor="text-purple-400"
                 iconBg="bg-purple-500/10"
-                trend={{
-                  value: "8.5%",
-                  isPositive: true,
-                  label: "vs last month",
-                }}
               />
               <StatCard
-                title="Active Models"
-                value="5/8"
-                icon="cpu"
+                title="Active Tags"
+                value={statsLoading ? "..." : String(stats?.tags.total || 0)}
+                icon="hash"
                 iconColor="text-fixtera-cyan"
                 iconBg="bg-fixtera-cyan/10"
+                badge={{ text: "Global Categories", color: "text-slate-500" }}
+              />
+              <StatCard
+                title="Pending Reviews"
+                value={
+                  statsLoading ? "..." : String(stats?.pendingReviews || 0)
+                }
+                icon="warning-circle"
+                iconColor="text-orange-400"
+                iconBg="bg-orange-500/10"
                 badge={{
-                  text: "All Systems Go",
-                  color: "text-green-400 bg-green-500/10",
+                  text:
+                    (stats?.pendingReviews || 0) > 5
+                      ? "Needs Attention"
+                      : "Low Priority",
+                  color:
+                    (stats?.pendingReviews || 0) > 5
+                      ? "text-red-400 font-medium bg-red-400/10"
+                      : "text-orange-400 font-medium bg-orange-400/10",
                 }}
               />
             </div>
@@ -308,12 +394,12 @@ function AdminContent() {
                   <i className="ph ph-funnel"></i> Filter
                 </button>
 
-                {/* Manual Write Button */}
+                {/* Create Blog Button (uses Drag & Drop Editor) */}
                 <button
                   onClick={() => router.push("/admin/blogs/create")}
-                  className="px-4 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white rounded-xl text-sm font-medium flex items-center gap-2 transition-all"
+                  className="px-4 py-2 bg-linear-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-xl text-sm font-semibold flex items-center gap-2 transition-all shadow-lg shadow-blue-500/20"
                 >
-                  <i className="ph ph-pencil-simple text-cyan-400"></i> Manual
+                  <i className="ph ph-grid-four"></i> Create Blog
                 </button>
 
                 {/* AI Generate Button */}
@@ -335,31 +421,7 @@ function AdminContent() {
               activeTab === "tags" ? "active" : ""
             }`}
           >
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white">
-                Tags Overview
-              </h3>
-              <button
-                onClick={handleCreateTag}
-                className="px-4 py-2 bg-linear-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl shadow-lg shadow-blue-500/20 text-sm font-semibold flex items-center gap-2 transition-all hover:scale-[1.02]"
-              >
-                <i className="ph ph-plus-circle text-lg"></i>
-                Add Tag
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tagsData.map((tag, index) => (
-                <TagCard
-                  key={tag._id}
-                  name={tag.name}
-                  articleCount={(index + 1) * 7 + 12}
-                  icon={"hash"}
-                  color={index % 2 === 0 ? "blue" : "pink"}
-                  progress={((index + 1) * 11) % 100}
-                />
-              ))}
-            </div>
+            <TagsSection />
           </div>
 
           {/* AI Models Section */}
@@ -457,8 +519,14 @@ function AdminContent() {
               {filteredNotifications.length > 0 ? (
                 filteredNotifications.map((notification) => (
                   <NotificationItem
-                    key={notification.id}
-                    {...notification}
+                    key={notification._id || notification.id}
+                    id={notification._id || notification.id || ""}
+                    icon={notification.icon}
+                    title={notification.title}
+                    message={notification.message}
+                    time={notification.time}
+                    isUnread={notification.isUnread}
+                    type={notification.type}
                     onMarkRead={handleMarkAsRead}
                     onEdit={handleEditClick}
                     onDelete={handleDeleteNotification}
