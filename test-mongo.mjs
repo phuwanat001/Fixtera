@@ -1,7 +1,15 @@
 import { MongoClient, ServerApiVersion } from "mongodb";
+import { config } from "dotenv";
 
-const uri =
-  "mongodb+srv://fixtera:L0wT5btUtbwDZ26M@cluster0.tvmjaol.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+// Load environment variables from .env file
+config();
+
+const uri = process.env.MONGODB_URL;
+
+if (!uri) {
+  console.error("Error: MONGODB_URL environment variable is not set");
+  process.exit(1);
+}
 
 const client = new MongoClient(uri, {
   serverApi: {
